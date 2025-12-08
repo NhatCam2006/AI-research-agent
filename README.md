@@ -8,35 +8,37 @@ An autonomous AI Agent designed to conduct deep research on any given topic. Bui
 
 ## 🚀 Features
 
-* **Iterative Research:** The agent doesn't just search once. It critiques its own findings and searches again if information is missing.
-* **Self-Reflection:** Includes a "Critique Node" that evaluates the quality of the gathered data before writing.
-* **Fast Inference:** Utilizes Groq's LPU to run the Llama 3.3-70b model at lightning speeds.
-* **State Management:** Uses LangGraph `StateGraph` to manage the workflow context effectively.
+- **Iterative Research:** The agent doesn't just search once. It critiques its own findings and searches again if information is missing.
+- **Self-Reflection:** Includes a "Critique Node" that evaluates the quality of the gathered data before writing.
+- **Fast Inference:** Utilizes Groq's LPU to run the Llama 3.3-70b model at lightning speeds.
+- **State Management:** Uses LangGraph `StateGraph` to manage the workflow context effectively.
 
 ## 🛠 Tech Stack
 
-* **Framework:** LangChain & LangGraph
-* **LLM Engine:** Groq (Model: `llama-3.3-70b-versatile`)
-* **Search Tool:** Tavily Search API
-* **Environment:** Python
+- **Framework:** LangChain & LangGraph
+- **LLM Engine:** Groq (Model: `llama-3.3-70b-versatile`)
+- **Search Tool:** Tavily Search API
+- **Environment:** Python
 
 ## ⚙️ Work Flow
 
 1.  **Search Node:** Queries the web for information about the user's topic.
 2.  **Critique Node:** The AI analyzes the search results.
-    * If the info is **"NOTFULL"**: It generates a better search query and loops back to the Search Node.
-    * If the info is **"FULL"**: It proceeds to the Write Node.
+    - If the info is **"NOTFULL"**: It generates a better search query and loops back to the Search Node.
+    - If the info is **"FULL"**: It proceeds to the Write Node.
 3.  **Write Node:** Synthesizes all gathered information into a concise, professional report.
 
 ## 📦 Installation
 
 1.  **Clone the repository:**
+
     ```bash
     git clone [https://github.com/NhatCam2006/AI-research-agent]
     cd ai-research-agent
     ```
 
 2.  **Install dependencies:**
+
     ```bash
     pip install -r requirements.txt
     ```
@@ -55,9 +57,4 @@ Run the agent with the following command:
 ```bash
 python main.py
 (Make sure to change the topic variable in main.py to research different subjects)
-
-🤝 Contributing
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-📄 License
-This project is licensed under the MIT License.
+```
