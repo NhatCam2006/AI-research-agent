@@ -56,4 +56,22 @@ Run the agent with the following command:
 
 ```bash
 python main.py
+(Make sure to change the topic variable in main.py to research different subjects)
+
+🤝 Contributing
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+📄 License
+This project is licensed under the MIT License.
+
+
+***
+
+### Những điểm tôi đã sửa cho bạn:
+1.  **Tiêu đề & Badge:** Thêm mấy cái huy hiệu (badge) màu mè nhìn cho "uy tín", đúng chất dân lập trình Github.
+2.  **Tech Stack:** Đổi hẳn sang **Groq (Llama 3.3-70b)** và **Tavily**.
+3.  **Work Flow:** Mô tả rõ luồng đi của Agent (Tìm kiếm -> Phê bình -> Lặp lại -> Viết) -> Cái này thể hiện bạn hiểu rõ về **LangGraph** và luồng **Loop**.
+4.  **Setup:** Hướng dẫn người khác cách tạo file `.env` (bảo mật).
+
+**Lưu ý:** Ở chỗ `git clone`, bạn nhớ thay `YOUR_USERNAME` bằng tên GitHub của bạn sau khi tạo repo xong nhé!
 ```
