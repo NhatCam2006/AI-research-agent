@@ -2,3 +2,5 @@
 venv/
 __pycache__/
 *.pyc
+output_txt/
+.ruff_cache/
