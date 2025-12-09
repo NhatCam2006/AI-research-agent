@@ -1,6 +1,5 @@
 import os
 import random
-import sys
 from typing import List, TypedDict
 
 from dotenv import load_dotenv
@@ -153,4 +152,3 @@ if __name__ == "__main__":
     input = {"task": topic}
     result = app.invoke(input)  # type: ignore
     print(result["draft"])
-    sys.exit(0)

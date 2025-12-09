@@ -1,4 +1,4 @@
-# 🤖 AI Research Agent with LangGraph & Groq
+# 🤖 AI Research Agent with LangGraph & Groq & Ollama
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![LangChain](https://img.shields.io/badge/LangChain-v0.2-green)
@@ -16,7 +16,7 @@ An autonomous AI Agent designed to conduct deep research on any given topic. Bui
 ## 🛠 Tech Stack
 
 - **Framework:** LangChain & LangGraph
-- **LLM Engine:** Groq (Model: `llama-3.3-70b-versatile`)
+- **LLM Engine:** Groq (Model: `llama-3.3-70b-versatile`), Ollama (Model: `qwen2.5:7b-instruct`)
 - **Search Tool:** Tavily Search API
 - **Environment:** Python
 
@@ -55,6 +55,5 @@ An autonomous AI Agent designed to conduct deep research on any given topic. Bui
 Run the agent with the following command:
 
 ```bash
-python main.py
-(Make sure to change the topic variable in main.py to research different subjects)
+streamlit run src/app.py
 ```
