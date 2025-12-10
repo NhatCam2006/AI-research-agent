@@ -1,66 +1,80 @@
+import uuid  # <--- Thêm thư viện tạo ID ngẫu nhiên
+
 import streamlit as st
 
-# Đảm bảo import đúng biến 'app' từ main.py
 from main import app
 
 st.set_page_config(page_title="AI Researcher Agent", page_icon="🕵️")
+st.title(" AI Researcher Agent (Có bộ nhớ)")
 
-st.title("🕵️ AI Researcher Agent")
+# === QUẢN LÝ SESSION (PHIÊN LÀM VIỆC) ===
+# Tạo một thread_id duy nhất cho phiên chat này nếu chưa có
+if "thread_id" not in st.session_state:
+    st.session_state.thread_id = str(uuid.uuid4())
+    st.session_state.messages = []  # Lưu lịch sử chat hiển thị lên web
 
-# Sidebar
+thread_id = st.session_state.thread_id
+st.sidebar.write(f"ID Phiên: `{thread_id}`")  # Hiển thị ID để debug chơi
+
+# Sidebar nhập liệu
 with st.sidebar:
     st.header("Cấu hình")
-    topic = st.text_input("Chủ đề:", "AI Agent năm 2025")
-    # Dùng form để tránh reload lung tung
-    with st.form(key="my_form"):
-        submit_button = st.form_submit_button(label="🚀 Bắt đầu nghiên cứu")
+    # Nút xóa bộ nhớ (Reset ID mới)
+    if st.button("🗑️ Xóa bộ nhớ / Chat mới"):
+        st.session_state.thread_id = str(uuid.uuid4())
+        st.session_state.messages = []
+        st.rerun()
 
-# Logic chính
-if submit_button and topic:
-    st.info(f"Đang bắt đầu nghiên cứu về: {topic}...")
+# === GIAO DIỆN CHAT ===
+# Hiển thị các tin nhắn cũ
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
 
-    # Tạo một khung để chứa nội dung log
-    log_container = st.container()
+# Ô nhập liệu chat (Thay cho cái form cũ)
+if prompt := st.chat_input("Nhập chủ đề nghiên cứu (VD: AI Agent là gì?)..."):
+    # 1. Hiện câu hỏi người dùng
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
 
-    inputs = {"task": topic}
-    final_result = ""
+    # 2. Cấu hình chạy Agent với Thread ID
+    config = {"configurable": {"thread_id": thread_id}}
 
-    try:
-        # Chạy vòng lặp
-        for output in app.stream(inputs):  # type: ignore
-            for key, value in output.items():
-                # In ra log trực tiếp để thấy nó chạy
-                with log_container:
+    # 3. Chạy Agent
+    with st.chat_message("assistant"):
+        message_placeholder = st.empty()
+        full_response = ""
+
+        # Biến inputs bây giờ chỉ cần update task mới
+        inputs = {"task": prompt, "count": 0}
+
+        # Thử chạy và bắt lỗi
+
+        try:
+            # Truyền thêm config vào app.stream
+            for output in app.stream(inputs, config=config):  # type: ignore
+                for key, value in output.items():
                     if key == "search":
-                        # Lấy số lần count, nếu không có thì mặc định là 1
-                        count = value.get("count", 1)
-                        st.markdown(f"🔎 **Researcher:** Đang tìm kiếm lần {count}...")
-
+                        msg = f"🔎 *Đang tìm kiếm lần {value.get('count')}...*"
+                        message_placeholder.markdown(msg)
                     elif key == "critique":
                         decision = value.get("draft", "")
                         if "NOTFULL" in decision:
-                            st.warning(
-                                f"🤔 **Reviewer:** Thấy thiếu thông tin ({decision})..."
+                            message_placeholder.markdown(
+                                "🤔 *Thông tin chưa đủ, tìm tiếp...*"
                             )
-                        else:
-                            st.success("✅ **Reviewer:** Duyệt! Đủ thông tin.")
-                            st.markdown("✍️ **Writer:** Đang viết bài tổng hợp...")
-
                     elif key == "write":
-                        final_result = value.get("draft", "")
+                        full_response = value.get("draft", "")
+                        # Lưu kết quả vào biến tạm để hiển thị sau cùng
 
-        # Hiển thị kết quả cuối cùng
-        if final_result:
-            st.divider()
-            st.subheader("📝 Báo cáo kết quả")
-            st.markdown(final_result)
+            # Hiển thị kết quả cuối cùng
+            message_placeholder.markdown(full_response)
 
-            st.download_button(
-                label="📥 Tải báo cáo", data=final_result, file_name="baocao.md"
+            # Lưu vào lịch sử chat của Streamlit
+            st.session_state.messages.append(
+                {"role": "assistant", "content": full_response}
             )
-        else:
-            st.error("Không nhận được kết quả cuối cùng.")
 
-    except Exception as e:
-        # In lỗi ra màn hình để biết đường sửa
-        st.error(f"Lỗi chi tiết: {e}")
+        except Exception as e:
+            st.error(f"Lỗi: {e}")

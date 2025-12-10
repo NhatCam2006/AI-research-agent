@@ -4,3 +4,6 @@ __pycache__/
 *.pyc
 output_txt/
 .ruff_cache/
+memory.db
+memory.db-shm
+memory.db-wal

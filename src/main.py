@@ -1,5 +1,6 @@
 import os
 import random
+import sqlite3
 from typing import List, TypedDict
 
 from dotenv import load_dotenv
@@ -7,6 +8,7 @@ from langchain_core.messages import HumanMessage
 
 # from langchain_groq import ChatGroq
 from langchain_ollama import ChatOllama
+from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import END, StateGraph
 from tavily import TavilyClient
 
@@ -42,10 +44,12 @@ def search_node(state: AgentState):
     print(f"Performing search #{count + 1} for query: {original_task}")
 
     if "NOTFULL" in draft_feedback:
-        query = f"""generate short search query
-        for {original_task}
-        focusing on missing info: {draft_feedback}
-        query: <short query (max 40 characters, min 10)>"""
+        query = f"""You are a helper optimized for generating search query.
+        Task: Generate the best search query to find specific missing details.
+        Original Topic: {original_task}
+        Missing Details: {draft_feedback}
+        Constraint: Output ONLY the query string. No quotes, no explanations, no preamble.
+        """
 
         response = llm.invoke([HumanMessage(content=query)])
         original_task = str(response.content).strip()
@@ -72,7 +76,8 @@ def critique_node(state: AgentState):
     
     ONLY ANSWER WITH 'FULL' OR 'NOTFULL: reason'.
     If the answer is sketchy or incomplete, respond with:
-    NOTFULL: <short reason (max 40 characters, min 10)>
+    NOTFULL: <reason why it's not full>
+    FULL: <no reason>.
     """
 
     response = llm.invoke([HumanMessage(content=critique_prompt)])
@@ -145,7 +150,9 @@ graph.add_conditional_edges(
 
 graph.add_edge("write", END)
 
-app = graph.compile()
+conn = sqlite3.connect("memory.db", check_same_thread=False)
+memory = SqliteSaver(conn)
+app = graph.compile(checkpointer=memory)
 
 if __name__ == "__main__":
     topic = "What is the impact of AI on the job market?"
