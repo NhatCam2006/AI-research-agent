@@ -1,15 +1,16 @@
 import os
 import random
 import sqlite3
-from typing import List, TypedDict
+from typing import Annotated, List, TypedDict
 
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
 
 # from langchain_groq import ChatGroq
 from langchain_ollama import ChatOllama
-from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
+from langgraph.graph.message import add_messages
 from tavily import TavilyClient
 
 load_dotenv()
@@ -30,10 +31,20 @@ llm = ChatOllama(model="qwen2.5:7b-instruct")
 
 
 class AgentState(TypedDict):
+    messages: Annotated[list, add_messages]
     task: str
     search_results: List[str]
     draft: str
     count: int
+
+
+def create_task_node(state: AgentState):
+    user_messages = state["messages"]
+    task_description = user_messages[
+        -1
+    ].content  # Lấy tin nhắn cuối cùng của người dùng
+    print(f"Creating task for user input: {task_description}")
+    return {"task": task_description}
 
 
 def search_node(state: AgentState):
@@ -74,7 +85,7 @@ def critique_node(state: AgentState):
     User requests: {state["task"]}
     Research results: {results}
     
-    ONLY ANSWER WITH 'FULL' OR 'NOTFULL: reason'.
+    ONLY ANSWER WITH 'FULL: not reason' OR 'NOTFULL: reason'.
     If the answer is sketchy or incomplete, respond with:
     NOTFULL: <reason why it's not full>
     FULL: <no reason>.
@@ -135,14 +146,16 @@ def should_continue(state: AgentState):
     return "write"
 
 
-graph = StateGraph(AgentState)
+graph = StateGraph(AgentState)  # type: ignore
 
+graph.add_node("create_task", create_task_node)
 graph.add_node("search", search_node)
 graph.add_node("critique", critique_node)
 graph.add_node("write", write_node)
 
-graph.set_entry_point("search")
+graph.set_entry_point("create_task")
 
+graph.add_edge("create_task", "search")
 graph.add_edge("search", "critique")
 graph.add_conditional_edges(
     "critique", should_continue, {"search": "search", "write": "write"}
@@ -151,11 +164,12 @@ graph.add_conditional_edges(
 graph.add_edge("write", END)
 
 conn = sqlite3.connect("memory.db", check_same_thread=False)
-memory = SqliteSaver(conn)
+# memory = SqliteSaver(conn)
+memory = MemorySaver()
 app = graph.compile(checkpointer=memory)
 
 if __name__ == "__main__":
     topic = "What is the impact of AI on the job market?"
-    input = {"task": topic}
-    result = app.invoke(input)  # type: ignore
+    input = {"messages": HumanMessage(content=topic)}
+    result = app.invoke(input, config={"configurable": {"thread_id": "123"}})  # type: ignore
     print(result["draft"])

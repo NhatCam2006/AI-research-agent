@@ -7,3 +7,4 @@ output_txt/
 memory.db
 memory.db-shm
 memory.db-wal
+test/
